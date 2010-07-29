@@ -100,7 +100,7 @@ class MovingCount < ActiveRecord::Base
     latest_sample =  self.maximum(:sample_time)
     return if latest_sample.nil? # sample is of course valid if no data exists
     
-    distance = (timestamp - latest_sample).abs
+    distance = (timestamp.to_i - latest_sample.to_i).abs
     if distance < sample_interval
       raise "Data recorded at #{self.maximum(:sample_time)} making #{timestamp} #{'%0.2f' % (sample_interval - distance)}s too soon on a #{sample_interval} interval."
     end
