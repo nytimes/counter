@@ -4,7 +4,7 @@ Count things and rank them, as a one-off or over time.
 
 Major components:
 * Counter - a simple class to track counts, then sort and rank
-* MovingCount - a base class built atop ActiveRecord to aggregate counts over time (think rrdtool for counts)
+* MovingCount - a base class built atop ActiveRecord to aggregate counts over time (think {rrdtool}[http://oss.oetiker.ch/rrdtool/] for counts)
 
 
 === Getting started
