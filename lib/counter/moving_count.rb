@@ -72,12 +72,15 @@ class MovingCount < ActiveRecord::Base
    
    self.transaction do
      check_sample_valid(timestamp)
+
+     unless c.counts.empty?
+       q = "INSERT INTO #{self.table_name} (sample_time, category, count) VALUES "
+       c.counts.each { |key, count| q += self.sanitize_sql(['(?, ?, ?),', timestamp, key, count]) }
+       q.chop!
      
-     q = "INSERT INTO #{self.table_name} (sample_time, category, count) VALUES "
-     c.counts.each { |key, count| q += self.sanitize_sql(['(?, ?, ?),', timestamp, key, count]) }
-     q.chop!
-     
-     self.connection.execute(q)
+       self.connection.execute(q)
+     end
+
      self.delete_all(['sample_time < ?', (timestamp - history_to_keep)])
    end
     

@@ -20,6 +20,11 @@ class MovingCountTest < Test::Unit::TestCase
       assert_equal 1, PageView.find_by_category('http://www.nytimes.com/article.html').count
     end
     
+    should "not save if no data was recorded" do
+      assert_nothing_raised { PageView.record_counts { |c| } }
+      assert_equal 0, PageView.count
+    end
+    
     context "sample interval" do
       should "raise a RuntimeError to enforce sample interval" do
         setup_existing_counts(59)
