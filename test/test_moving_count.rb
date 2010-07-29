@@ -68,6 +68,17 @@ class MovingCountTest < Test::Unit::TestCase
       
         assert_equal 2, PageView.count(:conditions => {:sample_time => Time.now})
       end
+      
+      should "use allow timestamp to be specified as a UNIX stamp" do
+        Timecop.freeze
+      
+        PageView.record_counts(Time.now.to_i) do |c|
+          c.saw('http://www.nytimes.com')
+          c.saw('http://www.nytimes.com/article.html')        
+        end
+      
+        assert_equal 2, PageView.count(:conditions => {:sample_time => Time.now})
+      end
     end
     
     context "purge" do

@@ -67,6 +67,7 @@ class MovingCount < ActiveRecord::Base
   # Yields a Counter instance, all standard methods apply.
   # Raises an exception if the timestamp would fall too soon under the <tt>sample_interval</tt>.
   def self.record_counts timestamp=Time.now, &block
+   timestamp = Time.at(timestamp) if timestamp.is_a?(Integer)
    c = Counter.new
    yield(c)
    
