@@ -1,18 +1,82 @@
 = counter
 
-Description goes here.
+Count things and rank them, as a one-off or over time.
 
-== Note on Patches/Pull Requests
- 
-* Fork the project.
-* Make your feature addition or bug fix.
-* Add tests for it. This is important so I don't break it in a
-  future version unintentionally.
-* Commit, do not mess with rakefile, version, or history.
-  (if you want to have your own version, that is fine but
-   bump version in a commit by itself I can ignore when I pull)
-* Send me a pull request. Bonus points for topic branches.
+Major components:
+* Counter - a simple class to track counts, then sort and rank
+* MovingCount - a base class built atop ActiveRecord to aggregate counts over time (think rrdtool for counts)
+
+
+=== Getting started
+
+  gem install counter
+  config.gem 'counter'
+  
+  require 'counter'
+  
+To use MovingCount, you'll also need to
+  require 'counter/moving_count'
+  
+(separate to prevent ActiveRecord dependency pollution)
+
+=== Counter
+
+  c = Counter.new
+  
+  # Counts can be incremented as a key appears
+  c.increment('some-key')
+  c.increment('some-key')
+  
+  # Or set directly
+  c.set('another-key', 42)
+
+  # You can retrieve all
+  c.counts
+  => [['another-key',42],['some-key',2]]
+  
+  # Or just the top-n
+  c.top(1)
+  => [['another-key',42]]
+  
+See Counter docs for detail.
+
+=== MovingCount
+
+  require 'counter/moving_count'
+  class PageView < MovingCount
+  end
+  
+  # In a migration:
+  #  create_table :page_views, :force => true do |t|
+  #    t.string   :category,      :null => false
+  #    t.integer  :count,         :null => false, :default => 0
+  #    t.datetime :sample_time,   :null => false
+  #  end
+  #
+  #  add_index :page_views, :category
+  
+  # First set of samples...
+  PageView.record_counts(Time.now - 5.minutes) do |c|
+    c.increment('a-key')
+    c.increment('a-key')
+  end
+  
+  # Second set...
+  PageView.record_counts(Time.now) do |c|
+    c.increment('a-key')
+    c.increment('another-key')
+  end
+  
+  # Contribute to totals.
+  PageView.totals
+  => [['a-key',3],['another-key',1]]
+  
+See MovingCount docs for detail.
+
+== Author
+
+Ben Koski, bkoski@nytimes.com
 
 == Copyright
 
-Copyright (c) 2010 Ben Koski. See LICENSE for details.
+Copyright (c) 2010 The New York Times Company. See LICENSE for details.
