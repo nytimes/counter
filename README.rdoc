@@ -71,7 +71,7 @@ See Counter docs for detail.
   PageView.totals
   => [['a-key',3],['another-key',1]]
   
-See MovingCount docs for detail.
+See MovingCount docs for detail (filters available on totals to limit results).
 
 == Author
 

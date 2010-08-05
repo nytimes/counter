@@ -88,10 +88,27 @@ class MovingCount < ActiveRecord::Base
     true
   end
   
-  # Returns totals across entire history.  Optional limit param restricts resultset.
-  def self.totals limit=nil
-    values = self.connection.select_rows("SELECT category, SUM(count) AS cnt FROM #{self.table_name} GROUP BY category ORDER BY cnt DESC #{"LIMIT #{limit}" if limit};")
+  # Returns totals across entire history.
+  # Optional filters can be used to filter totals:
+  #  * <tt>:limit</tt> limits results to top <em>n</em>
+  #  * <tt>:window</tt> limits totaled to samples to those in the past <em>n</em> seconds (can of course specify as 1.hour with ActiveSupport)
+  #  * <tt>:category_like</tt> run a LIKE match against categories before totaling, useful for limiting scope of totals.  '%' wildcards are allowed.
+  def self.totals opts={}
+    q  = "SELECT category, SUM(count) AS cnt FROM #{self.table_name}"
+    
+    where = []
+    where << self.sanitize_sql(['category LIKE ?', opts[:category_like]])                       if opts[:category_like]
+    where << self.sanitize_sql(['sample_time > ?', self.maximum(:sample_time) - opts[:window]]) if opts[:window]
+    
+    q += " WHERE #{where.join(' AND ')}" unless where.empty?
+    
+    q += ' GROUP BY category'
+    q += ' ORDER BY cnt DESC'
+    q += " LIMIT #{opts[:limit]}" if opts[:limit]
+    
+    values = self.connection.select_rows(q)
     values.map { |v| v[1] = v[1].to_i }
+    
     return values
   end
   

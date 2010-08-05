@@ -111,12 +111,28 @@ class MovingCountTest < Test::Unit::TestCase
         assert_equal [['http://www.nytimes.com',3],['http://www.nytimes.com/article.html',1]], PageView.totals
       end
       
+      should "filter to category_conditions if provided" do
+        setup_existing_counts(10.minutes)
+        setup_existing_counts(5.minutes)
+        PageView.record_counts { |c| c.saw('http://www.nytimes.com'); c.saw('http://www.nytimes.com/article.html') }
+        
+        assert_equal [['http://www.nytimes.com/article.html',1]],
+                     PageView.totals(:category_like => 'http://www.nytimes.com/article%')
+      end
+      
+      should "filter to window if provided" do
+        setup_existing_counts(10.minutes)
+        setup_existing_counts(5.minutes)
+        
+        assert_equal [['http://www.nytimes.com',1]], PageView.totals(:window => 5.minutes)
+      end
+      
       should "respect limit if provided" do
         setup_existing_counts(10.minutes)
         setup_existing_counts(5.minutes)
         PageView.record_counts { |c| c.saw('http://www.nytimes.com'); c.saw('http://www.nytimes.com/article.html') }
         
-        assert_equal [['http://www.nytimes.com',3]], PageView.totals(1)
+        assert_equal [['http://www.nytimes.com',3]], PageView.totals(:limit => 1)
       end
     end
     
