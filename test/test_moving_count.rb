@@ -111,7 +111,7 @@ class MovingCountTest < Test::Unit::TestCase
         assert_equal [['http://www.nytimes.com',3],['http://www.nytimes.com/article.html',1]], PageView.totals
       end
       
-      should "filter to category_conditions if provided" do
+      should "match against category_like if provided" do
         setup_existing_counts(10.minutes)
         setup_existing_counts(5.minutes)
         PageView.record_counts { |c| c.saw('http://www.nytimes.com'); c.saw('http://www.nytimes.com/article.html') }
@@ -133,6 +133,31 @@ class MovingCountTest < Test::Unit::TestCase
         PageView.record_counts { |c| c.saw('http://www.nytimes.com'); c.saw('http://www.nytimes.com/article.html') }
         
         assert_equal [['http://www.nytimes.com',3]], PageView.totals(:limit => 1)
+      end
+    end
+    
+    context "grand total" do
+      
+      should "return total sum across all samples" do
+        setup_existing_counts(10.minutes)
+        setup_existing_counts(5.minutes)
+        
+        assert_equal 2, PageView.grand_total
+      end
+      
+      should "match against category_like if providedd" do
+        setup_existing_counts(10.minutes)
+        setup_existing_counts(5.minutes)
+        PageView.record_counts { |c| c.saw('http://www.nytimes.com'); c.saw('http://www.nytimes.com/article.html') }
+        
+        assert_equal 1, PageView.grand_total(:category_like => 'http://www.nytimes.com/article%')
+      end
+      
+      should "filter to window if provided" do
+        setup_existing_counts(10.minutes)
+        setup_existing_counts(5.minutes)
+        
+        assert_equal 1, PageView.grand_total(:window => 5.minutes)
       end
     end
     

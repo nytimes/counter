@@ -88,7 +88,23 @@ class MovingCount < ActiveRecord::Base
     true
   end
   
-  # Returns totals across entire history.
+  # Returns single sum across all categories, limited by options.  Use this to get, say, total across all categories matching "http://myhost..."
+  # Optional filters:
+  #  * <tt>:window</tt> limits totaled to samples to those in the past <em>n</em> seconds (can of course specify as 1.hour with ActiveSupport)
+  #  * <tt>:category_like</tt> run a LIKE match against categories before totaling, useful for limiting scope of totals.  '%' wildcards are allowed.
+  def self.grand_total opts={}
+    q = "SELECT SUM(count) FROM #{self.table_name}"
+    
+    where = []
+    where << self.sanitize_sql(['category LIKE ?', opts[:category_like]])                       if opts[:category_like]
+    where << self.sanitize_sql(['sample_time > ?', self.maximum(:sample_time) - opts[:window]]) if opts[:window]
+    
+    q += " WHERE #{where.join(' AND ')}" unless where.empty?
+    
+    self.connection.select_value(q).to_i
+  end
+  
+  # Returns totals grouped by category across entire history.
   # Optional filters can be used to filter totals:
   #  * <tt>:limit</tt> limits results to top <em>n</em>
   #  * <tt>:window</tt> limits totaled to samples to those in the past <em>n</em> seconds (can of course specify as 1.hour with ActiveSupport)
