@@ -93,11 +93,14 @@ class MovingCount < ActiveRecord::Base
   #  * <tt>:window</tt> limits totaled to samples to those in the past <em>n</em> seconds (can of course specify as 1.hour with ActiveSupport)
   #  * <tt>:category_like</tt> run a LIKE match against categories before totaling, useful for limiting scope of totals.  '%' wildcards are allowed.
   def self.grand_total opts={}
+    latest_sample = self.maximum(:sample_time)
+    return 0 if latest_sample.nil? # don't try to run counts against empty db
+
     q = "SELECT SUM(count) FROM #{self.table_name}"
     
     where = []
     where << self.sanitize_sql(['category LIKE ?', opts[:category_like]])                       if opts[:category_like]
-    where << self.sanitize_sql(['sample_time > ?', self.maximum(:sample_time) - opts[:window]]) if opts[:window]
+    where << self.sanitize_sql(['sample_time > ?', latest_sample - opts[:window]]) if opts[:window]
     
     q += " WHERE #{where.join(' AND ')}" unless where.empty?
     
@@ -110,11 +113,14 @@ class MovingCount < ActiveRecord::Base
   #  * <tt>:window</tt> limits totaled to samples to those in the past <em>n</em> seconds (can of course specify as 1.hour with ActiveSupport)
   #  * <tt>:category_like</tt> run a LIKE match against categories before totaling, useful for limiting scope of totals.  '%' wildcards are allowed.
   def self.totals opts={}
+    latest_sample = self.maximum(:sample_time)
+    return [] if latest_sample.nil? # don't try to run counts against empty db
+    
     q  = "SELECT category, SUM(count) AS cnt FROM #{self.table_name}"
     
     where = []
     where << self.sanitize_sql(['category LIKE ?', opts[:category_like]])                       if opts[:category_like]
-    where << self.sanitize_sql(['sample_time > ?', self.maximum(:sample_time) - opts[:window]]) if opts[:window]
+    where << self.sanitize_sql(['sample_time > ?', latest_sample - opts[:window]]) if opts[:window]
     
     q += " WHERE #{where.join(' AND ')}" unless where.empty?
     

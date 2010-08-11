@@ -134,6 +134,10 @@ class MovingCountTest < Test::Unit::TestCase
         
         assert_equal [['http://www.nytimes.com',3]], PageView.totals(:limit => 1)
       end
+    
+      should "return an empty array if no data has been recorded" do
+        assert_equal [], PageView.totals
+      end
     end
     
     context "grand total" do
@@ -158,6 +162,10 @@ class MovingCountTest < Test::Unit::TestCase
         setup_existing_counts(5.minutes)
         
         assert_equal 1, PageView.grand_total(:window => 5.minutes)
+      end
+      
+      should "return 0 if no data has been recorded" do
+        assert_equal 0, PageView.grand_total
       end
     end
     
