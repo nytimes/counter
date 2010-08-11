@@ -67,9 +67,13 @@ See Counter docs for detail.
     c.increment('another-key')
   end
   
-  # Contribute to totals.
+  # Both contribute to totals grouped by category.
   PageView.totals
   => [['a-key',3],['another-key',1]]
+  
+  # Get the grand total across all categories.
+  PageView.grand_total
+  => 4
   
 See MovingCount docs for detail (filters available on totals to limit results).
 
